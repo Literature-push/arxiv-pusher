@@ -1,0 +1,129 @@
+.papers-page {
+  padding: 1rem 0;
+}
+
+.papers-page h1 {
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #0066cc;
+}
+
+.papers-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.category-selector {
+  display: flex;
+  align-items: center;
+}
+
+.category-selector label {
+  margin-right: 0.5rem;
+  font-weight: 500;
+}
+
+.category-selector select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: white;
+  min-width: 200px;
+}
+
+.search-box input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  min-width: 250px;
+}
+
+.papers-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.paper-card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.paper-title {
+  color: #0066cc;
+  margin-bottom: 0.5rem;
+}
+
+.paper-authors {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.paper-date {
+  color: #888;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.paper-summary {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.paper-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.paper-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #f0f0f0;
+  color: #0066cc;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.paper-link:hover {
+  background-color: #e0e0e0;
+  text-decoration: none;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.error {
+  color: #721c24;
+  background-color: #f8d7da;
+}
+
+@media screen and (max-width: 768px) {
+  .papers-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .category-selector, .search-box {
+    width: 100%;
+  }
+  
+  .category-selector select, .search-box input {
+    width: 100%;
+  }
+} 

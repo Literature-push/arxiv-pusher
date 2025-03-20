@@ -1,0 +1,59 @@
+.admin-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  max-width: 1200px;
+}
+
+.admin-container h1 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.admin-container .card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: transform 0.3s ease;
+}
+
+.admin-container .card:hover {
+  transform: translateY(-5px);
+}
+
+.admin-container .card-header {
+  background-color: #3498db;
+  color: white;
+  font-weight: 500;
+}
+
+.admin-container .btn-primary {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.admin-container .btn-success {
+  background-color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.admin-container .btn-info {
+  background-color: #1abc9c;
+  border-color: #1abc9c;
+  color: white;
+}
+
+.admin-container .btn-secondary {
+  background-color: #95a5a6;
+  border-color: #95a5a6;
+  margin-top: 1rem;
+}
+
+.admin-container .form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+@media (max-width: 768px) {
+  .admin-container .card {
+    margin-bottom: 1.5rem;
+  }
+} 

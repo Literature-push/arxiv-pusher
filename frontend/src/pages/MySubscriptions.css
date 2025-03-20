@@ -1,0 +1,56 @@
+.my-subscriptions-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  max-width: 1200px;
+}
+
+.my-subscriptions-container h1 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.subscription-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: transform 0.3s ease;
+  height: 100%;
+}
+
+.subscription-card:hover {
+  transform: translateY(-5px);
+}
+
+.subscription-card .card-header {
+  background-color: #3498db;
+  color: white;
+  padding: 1rem;
+  font-weight: 500;
+}
+
+.subscription-card .card-body {
+  padding: 1.5rem;
+}
+
+.subscription-card .card-footer {
+  background-color: #f9f9f9;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.badge {
+  padding: 0.5em 0.8em;
+  font-weight: normal;
+  font-size: 0.8rem;
+}
+
+.badge-primary {
+  background-color: #3498db;
+}
+
+.badge-info {
+  background-color: #1abc9c;
+}
+
+.alert-link {
+  text-decoration: underline;
+} 

@@ -1,0 +1,39 @@
+.about-page {
+  padding: 1rem 0;
+}
+
+.about-page h1 {
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #0066cc;
+}
+
+.about-section {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.about-section h2 {
+  color: #0066cc;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.about-section ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.about-section li {
+  margin-bottom: 0.5rem;
+}
+
+@media screen and (max-width: 768px) {
+  .about-section {
+    padding: 1.5rem;
+  }
+} 

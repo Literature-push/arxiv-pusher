@@ -1,0 +1,68 @@
+.settings-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  max-width: 1200px;
+}
+
+.settings-container h1 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.settings-container .card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: transform 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.settings-container .card:hover {
+  transform: translateY(-5px);
+}
+
+.settings-container .card-header {
+  background-color: #3498db;
+  color: white;
+  font-weight: 500;
+}
+
+.settings-container .form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+.settings-container .btn-primary {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.settings-container .btn-danger {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.settings-info {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-top: 2rem;
+}
+
+.settings-info h4 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.settings-info ul {
+  padding-left: 1.5rem;
+}
+
+.settings-info li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .settings-container .card {
+    margin-bottom: 1.5rem;
+  }
+} 
