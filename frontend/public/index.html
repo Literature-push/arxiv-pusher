@@ -10,6 +10,10 @@
       name="description"
       content="一个提供arXiv最新学术论文并基于关键词匹配进行推送的网站"
     />
+    <!-- 允许使用跨源隔离 -->
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+    
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>arXiv文献推送系统</title>
@@ -18,18 +22,130 @@
       if (typeof ZOTERO_CONFIG === 'undefined') {
         var ZOTERO_CONFIG = null;
       }
+      
+      // 添加全局代理切换函数，可能在网络错误时使用
+      window.ARXIV_PUSHER_CONFIG = {
+        corsProxies: [
+          'https://api.codetabs.com/v1/proxy?quest=',
+          'https://corsproxy.io/?',
+          'https://proxy.cors.sh/',
+          'https://cors-proxy.htmldriven.com/?url='
+        ],
+        currentProxyIndex: 0
+      };
+      
+      // 全局CORS错误处理函数
+      window.handleCorsError = function(url) {
+        console.warn('CORS错误，尝试切换代理: ' + url);
+        window.ARXIV_PUSHER_CONFIG.currentProxyIndex = 
+          (window.ARXIV_PUSHER_CONFIG.currentProxyIndex + 1) % 
+          window.ARXIV_PUSHER_CONFIG.corsProxies.length;
+        
+        return window.ARXIV_PUSHER_CONFIG.corsProxies[window.ARXIV_PUSHER_CONFIG.currentProxyIndex] + 
+          encodeURIComponent(url);
+      };
     </script>
     <!-- 加载EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-      (function() {
-        // EmailJS会在发送邮件前用settings页面设置的密钥初始化
-        // 这里不需要提前初始化
-        window.emailjs = window.emailjs || {};
-        window.emailjs.init = window.emailjs.init || function(publicKey) {
-          emailjs.init(publicKey);
+      // 确保EmailJS SDK正确加载
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('EmailJS SDK loaded:', typeof emailjs !== 'undefined');
+        
+        // 添加调试信息变量，帮助排查模板问题
+        window.EMAIL_DEBUG = {
+          lastError: null,
+          lastParams: null
         };
-      })();
+        
+        // 检查本地存储中是否有EmailJS配置
+        try {
+          const emailSettings = localStorage.getItem('email_settings');
+          if (emailSettings) {
+            const settings = JSON.parse(emailSettings);
+            if (settings && settings.emailjsId) {
+              console.log('Found EmailJS settings, initializing with public key');
+              // 添加显式try/catch以便更清晰地显示初始化错误
+              try {
+                emailjs.init(settings.emailjsId);
+                
+                // 为emailjs.send方法添加拦截器，记录发送参数和错误
+                const originalSend = emailjs.send;
+                emailjs.send = function(serviceId, templateId, params, publicKey) {
+                  console.log('EmailJS send intercepted:', {
+                    serviceId,
+                    templateId,
+                    params,
+                    publicKeyLength: publicKey ? publicKey.length : 0
+                  });
+                  
+                  // 存储参数用于调试
+                  window.EMAIL_DEBUG.lastParams = {
+                    serviceId,
+                    templateId,
+                    params,
+                    time: new Date().toISOString()
+                  };
+                  
+                  return originalSend.call(this, serviceId, templateId, params, publicKey)
+                    .catch(error => {
+                      // 记录错误
+                      window.EMAIL_DEBUG.lastError = {
+                        error: error,
+                        params: params,
+                        time: new Date().toISOString()
+                      };
+                      throw error;
+                    });
+                };
+              } catch (initErr) {
+                console.error('EmailJS initialization failed:', initErr);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Error initializing EmailJS:', e);
+        }
+      });
+    </script>
+    <!-- 测试模板变量辅助脚本 -->
+    <script>
+      // 提供测试变量的辅助函数
+      window.testEmailjsTemplate = function(serviceId, templateId, publicKey) {
+        if (!window.emailjs) {
+          return console.error('EmailJS not loaded');
+        }
+        
+        try {
+          // 使用所有可能的变量名创建测试参数
+          const testParams = {
+            to_email: "test@example.com",
+            recipient: "test@example.com", 
+            user_email: "test@example.com",
+            to_name: "Test User",
+            from_name: "Test Sender",
+            subject: "Test Subject",
+            message: "Test Message",
+            papers: "<p>Test Paper Content</p>",
+            content: "<p>Test Content</p>"
+          };
+          
+          console.log('Testing EmailJS template:', {serviceId, templateId});
+          emailjs.send(serviceId, templateId, testParams, publicKey)
+            .then(function(res) {
+              console.log('Template test success:', res);
+            })
+            .catch(function(err) {
+              console.error('Template test error:', err);
+              // 分析错误提示可能的变量问题
+              if (err.text && err.text.includes('recipient')) {
+                console.warn('💡 提示: 模板可能需要在To Email字段使用{{to_email}}变量');
+              }
+            });
+        } catch (e) {
+          console.error('Error testing template:', e);
+        }
+      };
     </script>
   </head>
   <body>
