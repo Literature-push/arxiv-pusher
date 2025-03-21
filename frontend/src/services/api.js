@@ -8,8 +8,8 @@ import { getOpenAIKey } from './localData';
 import axios from 'axios';
 
 const ARXIV_API_BASE = 'https://export.arxiv.org/api/query';
-// 使用更可靠的CORS代理
-const CORS_PROXY = 'https://cors.bridged.cc/'; 
+// 使用可靠的CORS代理 - allOrigins
+const CORS_PROXY = 'https://api.allorigins.win/raw?url='; 
 
 /**
  * 从arXiv API获取最新论文列表
@@ -27,10 +27,10 @@ export const fetchPapers = async (category = 'cs') => {
     };
     
     // 使用CORS代理访问arXiv API
-    // 构建完整URL而不是使用params对象
+    // 构建完整URL
     const queryParams = new URLSearchParams(params).toString();
     const apiUrl = `${ARXIV_API_BASE}?${queryParams}`;
-    const proxyUrl = `${CORS_PROXY}${apiUrl}`;
+    const proxyUrl = `${CORS_PROXY}${encodeURIComponent(apiUrl)}`;
     
     console.log('Fetching papers from:', proxyUrl);
     
@@ -38,11 +38,9 @@ export const fetchPapers = async (category = 'cs') => {
     const response = await axios({
       method: 'get',
       url: proxyUrl,
-      timeout: 15000, // 15秒超时
+      timeout: 20000, // 20秒超时
       headers: {
-        'x-requested-with': 'XMLHttpRequest',
-        'Accept': 'application/xml',
-        'Content-Type': 'application/xml'
+        'Accept': 'application/xml'
       }
     });
     
@@ -328,8 +326,11 @@ export const sendEmailNotification = async (to, papers) => {
     const { emailjsId, serviceId, templateId } = settings;
     
     if (!window.emailjs) {
-      throw new Error('EmailJS未加载');
+      throw new Error('EmailJS未加载，请刷新页面重试');
     }
+    
+    // 初始化EmailJS
+    window.emailjs.init(emailjsId);
     
     // 准备论文内容
     const papersHTML = papers.map(paper => `
@@ -348,10 +349,8 @@ export const sendEmailNotification = async (to, papers) => {
       templateId,
       {
         to_email: to,
-        subject: '最新arXiv论文推荐',
         papers: papersHTML
-      },
-      emailjsId
+      }
     );
     
     return { 

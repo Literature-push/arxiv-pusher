@@ -23,8 +23,12 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
       (function() {
-        // 初始化EmailJS，后续会从Settings页面设置具体的用户ID
+        // EmailJS会在发送邮件前用settings页面设置的密钥初始化
+        // 这里不需要提前初始化
         window.emailjs = window.emailjs || {};
+        window.emailjs.init = window.emailjs.init || function(publicKey) {
+          emailjs.init(publicKey);
+        };
       })();
     </script>
   </head>

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Badge, Alert, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Card, Button, Badge, Alert, Row, Col, Spinner, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { getUserSubscriptions, deleteUserSubscription } from '../services/localData';
-import { testKeywordMatch } from '../services/api';
+import { getUserSubscriptions, deleteUserSubscription, isPaperInHistory, addPapersToHistory } from '../services/localData';
+import { testKeywordMatch, sendEmailNotification } from '../services/api';
 import { sendPapersEmail } from '../services/emailService';
-import { addPapersToHistory } from '../services/localData';
 import { isConfigured } from '../services/localData';
 import './MySubscriptions.css';
 
@@ -15,6 +14,8 @@ function MySubscriptions() {
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('');
   const [configured, setConfigured] = useState(false);
+  const [activeSubscription, setActiveSubscription] = useState(null);
+  const [matchedPapers, setMatchedPapers] = useState({});
 
   useEffect(() => {
     loadSubscriptions();
@@ -40,53 +41,96 @@ function MySubscriptions() {
     }
   };
 
-  const handleRefresh = async (subscription) => {
-    if (!configured) {
-      setMessage('请先在设置页面配置您的API密钥和邮箱信息！');
-      setMessageType('warning');
-      return;
-    }
-    
-    setRefreshing({ ...refreshing, [subscription.id]: true });
-    setMessage(null);
-    
+  const handleRefreshRecommendations = async (subscription) => {
     try {
-      // 遍历所有分类，查找匹配的论文
-      let allMatchedPapers = [];
+      setLoading(true);
+      setActiveSubscription(subscription.id);
       
-      for (const category of subscription.categories) {
-        const matchedPapers = await testKeywordMatch(
-          subscription.keywords, 
-          true,  // 使用OpenAI
-          category
-        );
-        allMatchedPapers = [...allMatchedPapers, ...matchedPapers];
-      }
+      const { email, keywords, categories } = subscription;
       
-      if (allMatchedPapers.length === 0) {
-        setMessage(`没有找到与"${subscription.email}"订阅匹配的新论文`);
-        setMessageType('info');
-      } else {
-        // 发送邮件
-        const sent = await sendPapersEmail(subscription.email, allMatchedPapers);
+      // 获取所有分类的匹配论文
+      const allMatches = {};
+      
+      for (const category of categories) {
+        setMessage({
+          type: 'info',
+          text: `正在获取 ${category} 分类的论文...`
+        });
         
-        // 添加到历史记录
-        addPapersToHistory(subscription.email, allMatchedPapers);
+        // 使用简单匹配，默认不使用OpenAI
+        const matches = await testKeywordMatch(keywords, false, category);
         
-        if (sent) {
-          setMessage(`已找到${allMatchedPapers.length}篇匹配的论文并发送到"${subscription.email}"`);
-          setMessageType('success');
-        } else {
-          setMessage(`已找到${allMatchedPapers.length}篇匹配的论文，但邮件发送失败`);
-          setMessageType('warning');
+        // 过滤掉历史上已发送过的论文
+        const newMatches = matches.filter(paper => !isPaperInHistory(email, paper.link));
+        
+        if (newMatches.length > 0) {
+          allMatches[category] = newMatches;
         }
       }
+      
+      setMatchedPapers({
+        ...matchedPapers,
+        [subscription.id]: allMatches
+      });
+      
+      setMessage({
+        type: 'success',
+        text: '推荐刷新完成'
+      });
     } catch (error) {
-      console.error('Error refreshing subscription:', error);
-      setMessage(`刷新订阅失败: ${error.message}`);
-      setMessageType('danger');
+      console.error('Error refreshing recommendations:', error);
+      setMessage({
+        type: 'danger',
+        text: `刷新推荐失败: ${error.message}`
+      });
     } finally {
-      setRefreshing({ ...refreshing, [subscription.id]: false });
+      setLoading(false);
+    }
+  };
+
+  const handleSendEmail = async (subscription) => {
+    try {
+      const { email } = subscription;
+      const papers = [];
+      
+      // 收集所有分类的论文
+      const subPapers = matchedPapers[subscription.id];
+      if (!subPapers) {
+        throw new Error('没有找到匹配的论文，请先刷新推荐');
+      }
+      
+      Object.values(subPapers).forEach(categoryPapers => {
+        papers.push(...categoryPapers);
+      });
+      
+      if (papers.length === 0) {
+        throw new Error('没有找到新的匹配论文');
+      }
+      
+      // 限制论文数量，避免邮件过大
+      const limitedPapers = papers.slice(0, 10);
+      
+      setMessage({
+        type: 'info',
+        text: '正在发送邮件...'
+      });
+      
+      // 发送邮件
+      await sendEmailNotification(email, limitedPapers);
+      
+      // 记录已发送的论文
+      addPapersToHistory(email, limitedPapers);
+      
+      setMessage({
+        type: 'success',
+        text: '邮件发送成功'
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setMessage({
+        type: 'danger',
+        text: `邮件发送失败: ${error.message}`
+      });
     }
   };
 
@@ -244,15 +288,15 @@ function MySubscriptions() {
                     <Button 
                       variant="outline-primary" 
                       size="sm"
-                      onClick={() => handleRefresh(subscription)}
-                      disabled={refreshing[subscription.id]}
+                      onClick={() => handleRefreshRecommendations(subscription)}
+                      disabled={loading && activeSubscription === subscription.id}
                     >
-                      {refreshing[subscription.id] ? (
+                      {loading && activeSubscription === subscription.id ? (
                         <>
                           <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
                           <span className="ms-2">刷新中...</span>
                         </>
-                      ) : '立即刷新'}
+                      ) : '刷新推荐'}
                     </Button>
                   </div>
                 </Card.Body>
