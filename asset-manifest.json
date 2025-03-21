@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/arxiv-pusher/static/css/main.5cf1b871.css",
+    "main.js": "/arxiv-pusher/static/js/main.f475a0ac.js",
+    "index.html": "/arxiv-pusher/index.html",
+    "main.5cf1b871.css.map": "/arxiv-pusher/static/css/main.5cf1b871.css.map",
+    "main.f475a0ac.js.map": "/arxiv-pusher/static/js/main.f475a0ac.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5cf1b871.css",
+    "static/js/main.f475a0ac.js"
+  ]
+}
