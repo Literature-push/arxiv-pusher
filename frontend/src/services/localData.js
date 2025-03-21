@@ -112,6 +112,17 @@ export const getOpenAIKey = () => {
   return localStorage.getItem('openai_api_key') || '';
 };
 
+// 保存OpenAI API密钥
+export const saveOpenAIKey = (key) => {
+  try {
+    localStorage.setItem('openai_api_key', key);
+    return true;
+  } catch (error) {
+    console.error('Failed to save OpenAI API key:', error);
+    return false;
+  }
+};
+
 // 获取邮箱设置
 export const getEmailSettings = () => {
   try {
