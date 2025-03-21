@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
   <head>
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0066cc" />
+    <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="arXiv文献推送系统 - 获取最新学术论文，根据您的兴趣自动推送"
+      content="一个提供arXiv最新学术论文并基于关键词匹配进行推送的网站"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>arXiv文献推送系统</title>
+    <script>
+      // 防止ZOTERO_CONFIG重复声明错误
+      if (typeof ZOTERO_CONFIG === 'undefined') {
+        var ZOTERO_CONFIG = null;
+      }
+    </script>
+    <!-- 加载EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+      (function() {
+        // 初始化EmailJS，后续会从Settings页面设置具体的用户ID
+        window.emailjs = window.emailjs || {};
+      })();
+    </script>
   </head>
   <body>
     <noscript>您需要启用JavaScript才能运行此应用。</noscript>

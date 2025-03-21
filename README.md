@@ -111,41 +111,37 @@
 
 ### 邮箱设置全流程
 
-本应用使用EmailJS服务发送邮件通知。以下是完整设置流程：
+本应用使用EmailJS服务发送邮件通知，这是一个简单的无需后端服务器的邮件发送方案：
 
 1. **注册EmailJS账户**：
-   - 访问 [EmailJS官网](https://www.emailjs.com/) 并注册账户
-   - 免费计划每月可发送200封邮件，足够个人使用
+   - 访问 [EmailJS官网](https://www.emailjs.com/) 并免费注册账户
+   - 免费计划每月可发送200封邮件，无需信用卡
 
 2. **创建邮件服务**：
    - 登录后，点击"Email Services"→"Add New Service"
-   - 选择您喜欢的邮件服务提供商（Gmail、Outlook等）
-   - 按照提示完成服务连接（通常需要授权访问）
+   - 选择您喜欢的邮件服务提供商（如Gmail）并连接账户
 
 3. **创建邮件模板**：
    - 前往"Email Templates"→"Create New Template"
-   - 设计您的模板，确保包含以下变量：
-     - `{{to_email}}` - 收件人邮箱
-     - `{{subject}}` - 邮件主题
-     - `{{papers}}` - 推荐论文列表
+   - 设计简单的模板，确保包含变量：`{{to_email}}`和`{{papers}}`
+   - 模板可以使用简单的HTML代码：
+     ```html
+     <h2>arXiv论文推荐</h2>
+     <p>您好，以下是基于您的兴趣关键词的最新论文:</p>
+     <div>{{papers}}</div>
+     ```
 
-4. **获取必要ID**：
-   - 记下您的Service ID（在Email Services页面）
-   - 记下您的Template ID（在Email Templates页面）
-   - 前往Integration页面复制您的Public Key
+4. **获取必要信息**：
+   - 复制您的Public Key (在Integration页面)
+   - 复制您的Service ID (格式如：service_xxxxxxx)
+   - 复制您的Template ID (格式如：template_xxxxxxx)
 
 5. **在arXiv推送系统中配置**：
-   - 前往"设置"页面的"邮件设置"部分
-   - 输入您的EmailJS Public Key
-   - 输入您的Service ID
-   - 输入您的Template ID
-   - 点击"保存邮件设置"按钮
+   - 前往"设置"页面的"EmailJS设置"部分
+   - 输入上面获取的三个ID
+   - 点击"保存邮箱设置"
 
-**使用建议**：
-- 邮件服务设置是可选的，即使不设置也能使用基本推荐功能
-- 设置完成后，系统会在"我的订阅"页面显示"发送邮件"按钮
-- 每次发送邮件都会消耗您的EmailJS配额
-- 定期检查EmailJS仪表板监控用量情况
+完成以上步骤后，您就可以在"我的订阅"页面发送邮件通知了。
 
 ## 使用方法
 

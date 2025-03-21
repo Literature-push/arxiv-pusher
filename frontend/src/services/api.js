@@ -8,7 +8,8 @@ import { getOpenAIKey } from './localData';
 import axios from 'axios';
 
 const ARXIV_API_BASE = 'https://export.arxiv.org/api/query';
-const CORS_PROXY = 'https://api.allorigins.win/raw?url='; // 使用CORS代理
+// 使用更可靠的CORS代理
+const CORS_PROXY = 'https://cors.bridged.cc/'; 
 
 /**
  * 从arXiv API获取最新论文列表
@@ -26,7 +27,25 @@ export const fetchPapers = async (category = 'cs') => {
     };
     
     // 使用CORS代理访问arXiv API
-    const response = await axios.get(`${CORS_PROXY}${encodeURIComponent(`${ARXIV_API_BASE}?${new URLSearchParams(params)}`)}`);    
+    // 构建完整URL而不是使用params对象
+    const queryParams = new URLSearchParams(params).toString();
+    const apiUrl = `${ARXIV_API_BASE}?${queryParams}`;
+    const proxyUrl = `${CORS_PROXY}${apiUrl}`;
+    
+    console.log('Fetching papers from:', proxyUrl);
+    
+    // 添加超时设置
+    const response = await axios({
+      method: 'get',
+      url: proxyUrl,
+      timeout: 15000, // 15秒超时
+      headers: {
+        'x-requested-with': 'XMLHttpRequest',
+        'Accept': 'application/xml',
+        'Content-Type': 'application/xml'
+      }
+    });
+    
     // 解析XML响应
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response.data, "text/xml");
@@ -151,7 +170,19 @@ export const subscribeUser = async (email, keywords, categories) => {
 export const checkRelevanceWithOpenAI = async (paperText, keywords) => {
   const apiKey = getOpenAIKey();
   if (!apiKey) {
-    throw new Error('OpenAI API密钥未设置');
+    console.log('OpenAI API密钥未设置，使用简单关键词匹配');
+    // 使用简单的关键词匹配
+    const matches = keywords.filter(keyword => 
+      paperText.toLowerCase().includes(keyword.toLowerCase())
+    );
+    return {
+      isRelevant: matches.length > 0,
+      matchedKeywords: matches,
+      score: matches.length > 0 ? 0.7 : 0,
+      explanation: matches.length > 0 
+        ? `找到${matches.length}个匹配关键词` 
+        : '未找到匹配关键词'
+    };
   }
   
   try {
@@ -206,8 +237,8 @@ export const checkRelevanceWithOpenAI = async (paperText, keywords) => {
       matchedKeywords: matches,
       score: matches.length > 0 ? 0.7 : 0,
       explanation: matches.length > 0 
-        ? `Found ${matches.length} matching keywords` 
-        : 'No matching keywords found'
+        ? `找到${matches.length}个匹配关键词` 
+        : '未找到匹配关键词'
     };
   }
 };
@@ -219,7 +250,7 @@ export const checkRelevanceWithOpenAI = async (paperText, keywords) => {
  * @param {string} category - 论文分类
  * @returns {Promise<Array>} - 匹配的论文列表
  */
-export const testKeywordMatch = async (keywords, useOpenAI = true, category = 'cs') => {
+export const testKeywordMatch = async (keywords, useOpenAI = false, category = 'cs') => {
   try {
     // 获取论文
     const papers = await fetchPapers(category);
@@ -231,7 +262,7 @@ export const testKeywordMatch = async (keywords, useOpenAI = true, category = 'c
       // 提取论文文本
       const paperText = `${paper.title} ${paper.summary}`;
       
-      if (useOpenAI) {
+      if (useOpenAI && getOpenAIKey()) {
         // 使用OpenAI检查相关性
         const { isRelevant, matchedKeywords } = await checkRelevanceWithOpenAI(paperText, keywords);
         
@@ -252,7 +283,7 @@ export const testKeywordMatch = async (keywords, useOpenAI = true, category = 'c
       }
       
       // 限制处理的论文数量，避免API调用过多
-      if (matchedPapers.length >= 10 && useOpenAI) {
+      if (matchedPapers.length >= 10 && useOpenAI && getOpenAIKey()) {
         break;
       }
     }
@@ -266,18 +297,71 @@ export const testKeywordMatch = async (keywords, useOpenAI = true, category = 'c
 
 /**
  * 设置邮件配置
- * @param {string} email - 发送邮件的邮箱
- * @param {string} password - 邮箱密码或应用密码
+ * @param {Object} emailConfig - 邮件配置
  * @returns {Promise<Object>} - 设置结果
  */
-export const setEmailConfig = async (email, password) => {
+export const setEmailConfig = async (emailConfig) => {
   try {
     // 存储到本地存储
-    localStorage.setItem('email_settings', JSON.stringify({ email, password }));
+    localStorage.setItem('email_settings', JSON.stringify(emailConfig));
     return { success: true, message: '邮箱配置已保存' };
   } catch (error) {
     console.error('Error setting email config:', error);
     throw error;
+  }
+};
+
+/**
+ * 发送邮件通知
+ * @param {string} to - 接收邮件的邮箱
+ * @param {Array} papers - 要发送的论文列表
+ * @returns {Promise<Object>} - 发送结果
+ */
+export const sendEmailNotification = async (to, papers) => {
+  try {
+    const emailSettings = localStorage.getItem('email_settings');
+    if (!emailSettings) {
+      throw new Error('邮箱设置未配置');
+    }
+    
+    const settings = JSON.parse(emailSettings);
+    const { emailjsId, serviceId, templateId } = settings;
+    
+    if (!window.emailjs) {
+      throw new Error('EmailJS未加载');
+    }
+    
+    // 准备论文内容
+    const papersHTML = papers.map(paper => `
+      <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+        <h3><a href="${paper.link}" target="_blank">${paper.title}</a></h3>
+        <p><strong>作者:</strong> ${paper.authors.join(', ')}</p>
+        <p><strong>发布日期:</strong> ${new Date(paper.published).toLocaleDateString()}</p>
+        <p><strong>匹配关键词:</strong> ${paper.matched_keywords.join(', ')}</p>
+        <p>${paper.summary.substring(0, 200)}...</p>
+      </div>
+    `).join('');
+    
+    // 发送邮件
+    const response = await window.emailjs.send(
+      serviceId,
+      templateId,
+      {
+        to_email: to,
+        subject: '最新arXiv论文推荐',
+        papers: papersHTML
+      },
+      emailjsId
+    );
+    
+    return { 
+      success: true, 
+      message: '邮件发送成功',
+      response
+    };
+  } catch (error) {
+    console.error('Error sending email notification:', error);
+    throw new Error(`邮件发送失败: ${error.message}`);
   }
 };
 
