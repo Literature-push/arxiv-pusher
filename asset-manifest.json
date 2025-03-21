@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/arxiv-pusher/static/css/main.5cf1b871.css",
-    "main.js": "/arxiv-pusher/static/js/main.d3080041.js",
+    "main.js": "/arxiv-pusher/static/js/main.f0a2e7b3.js",
     "index.html": "/arxiv-pusher/index.html",
     "main.5cf1b871.css.map": "/arxiv-pusher/static/css/main.5cf1b871.css.map",
-    "main.d3080041.js.map": "/arxiv-pusher/static/js/main.d3080041.js.map"
+    "main.f0a2e7b3.js.map": "/arxiv-pusher/static/js/main.f0a2e7b3.js.map"
   },
   "entrypoints": [
     "static/css/main.5cf1b871.css",
-    "static/js/main.d3080041.js"
+    "static/js/main.f0a2e7b3.js"
   ]
 }
