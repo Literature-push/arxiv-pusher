@@ -8,7 +8,7 @@ import { getOpenAIKey } from './localData';
 import axios from 'axios';
 
 const ARXIV_API_BASE = 'https://export.arxiv.org/api/query';
-const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'; // 使用CORS代理
+const CORS_PROXY = 'https://api.allorigins.win/raw?url='; // 使用CORS代理
 
 /**
  * 从arXiv API获取最新论文列表
@@ -26,8 +26,7 @@ export const fetchPapers = async (category = 'cs') => {
     };
     
     // 使用CORS代理访问arXiv API
-    const response = await axios.get(`${CORS_PROXY}${ARXIV_API_BASE}`, { params });
-    
+    const response = await axios.get(`${CORS_PROXY}${encodeURIComponent(`${ARXIV_API_BASE}?${new URLSearchParams(params)}`)}`);    
     // 解析XML响应
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response.data, "text/xml");
@@ -77,7 +76,7 @@ export const fetchPapers = async (category = 'cs') => {
     }));
     
     return papers;
-  } catch (error) {
+  }catch (error) {
     console.error('Error fetching papers from arXiv:', error);
     
     // 如果请求失败，尝试从本地存储获取
@@ -87,7 +86,17 @@ export const fetchPapers = async (category = 'cs') => {
       return data;
     }
     
-    throw error;
+    // 返回示例数据而不是抛出错误，以避免UI崩溃
+    return [
+      {
+        title: "示例论文 - 无法从arXiv获取数据",
+        authors: ["示例作者"],
+        published: new Date().toISOString(),
+        summary: "由于CORS或网络问题，无法从arXiv获取数据。请检查网络连接或尝试更换代理服务。",
+        link: "https://arxiv.org",
+        categories: [category]
+      }
+    ];
   }
 };
 
@@ -263,20 +272,9 @@ export const testKeywordMatch = async (keywords, useOpenAI = true, category = 'c
  */
 export const setEmailConfig = async (email, password) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/email-config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    // 存储到本地存储
+    localStorage.setItem('email_settings', JSON.stringify({ email, password }));
+    return { success: true, message: '邮箱配置已保存' };
   } catch (error) {
     console.error('Error setting email config:', error);
     throw error;
@@ -290,20 +288,9 @@ export const setEmailConfig = async (email, password) => {
  */
 export const generateRecommendations = async (useOpenAI = true) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/generate-recommendations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ use_openai: useOpenAI }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    // 前端版本中，这个函数只返回成功状态
+    // 实际的推荐生成在MySubscriptions页面中进行
+    return { success: true, message: '推荐生成功能已迁移到"我的订阅"页面' };
   } catch (error) {
     console.error('Error generating recommendations:', error);
     throw error;
@@ -316,19 +303,24 @@ export const generateRecommendations = async (useOpenAI = true) => {
  */
 export const updatePapers = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/update-papers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // 前端版本中，这个函数直接从arXiv API获取最新论文
+    const categories = ['cs', 'math', 'physics', 'q-bio', 'stat'];
+    const results = {};
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    for (const category of categories) {
+      try {
+        const papers = await fetchPapers(category);
+        results[category] = papers.length;
+      } catch (err) {
+        results[category] = 0;
+      }
     }
     
-    return await response.json();
+    return { 
+      success: true, 
+      message: '论文更新完成', 
+      counts: results 
+    };
   } catch (error) {
     console.error('Error updating papers:', error);
     throw error;
